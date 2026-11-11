@@ -12,7 +12,8 @@ job.json：
                                                  # 也可以锁一段台词音频：{"audio": "line1.wav", "frame": 14}，H3 只对口型，不自己生成这句的声音
   "audios": [],                                  # 参考音：说话角色的声音参考；旁白段留空
   "videos": [],                                  # 可选，参考视频（24fps、2–15 秒）：提供镜头运动、切镜和动作，提示词里叫 <Video 1>
-  "shift": null                                  # 可选 [video, audio]，一般不用
+  "shift": null,                                 # 可选 [video, audio]，一般不用
+  "turbo": false                                 # true = 4 步加速 LoRA（minimax_h3_ref2v_turbo_4step_v0.1），euler/simple，shift 12/3，约快 5 倍
 }
 旁白段的 prompt 里不要写任何台词；一次生成只有一个发声来源。
 """
@@ -22,6 +23,11 @@ import comfy
 a = json.load(open(sys.argv[1]))
 p = {"1": {"class_type": "UNETLoader", "inputs": {"unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors", "weight_dtype": "default"}}}
 model = ["1", 0]
+if a.get("turbo"):
+    p["6"] = {"class_type": "LoraLoaderModelOnly", "inputs": {"model": model, "lora_name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors", "strength_model": 1.0}}
+    model = ["6", 0]
+    a.setdefault("shift", [12, 3])
+    a.setdefault("steps", 4)
 if a.get("shift"):
     p["2"] = {"class_type": "MiniMaxH3SigmaShift", "inputs": {"model": model, "shift_video": a["shift"][0], "shift_audio": a["shift"][1]}}
     model = ["2", 0]
@@ -61,7 +67,7 @@ for i, g in enumerate(a.get("guides", [])):
     p[nid] = {"class_type": "MiniMaxH3AddGuide", "inputs": inp}
     pos = [nid, 0]
 p["40"] = {"class_type": "BasicGuider", "inputs": {"model": model, "conditioning": pos}}
-p["41"] = {"class_type": "KSamplerSelect", "inputs": {"sampler_name": "res_multistep"}}
+p["41"] = {"class_type": "KSamplerSelect", "inputs": {"sampler_name": "euler" if a.get("turbo") else "res_multistep"}}
 p["42"] = {"class_type": "BasicScheduler", "inputs": {"model": model, "scheduler": "simple", "steps": a.get("steps", 20), "denoise": 1.0}}
 p["43"] = {"class_type": "RandomNoise", "inputs": {"noise_seed": a.get("seed", 7)}}
 p["44"] = {"class_type": "SamplerCustomAdvanced", "inputs": {"noise": ["43", 0], "guider": ["40", 0], "sampler": ["41", 0], "sigmas": ["42", 0], "latent_image": lat}}
