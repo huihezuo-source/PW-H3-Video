@@ -14,6 +14,7 @@ job.json：
   "videos": [],                                  # 可选，参考视频（24fps、2–15 秒）：提供镜头运动、切镜和动作，提示词里叫 <Video 1>
   "shift": null,                                 # 可选 [video, audio]，一般不用
   "turbo": false,                                # true = 4 步加速 LoRA（minimax_h3_ref2v_turbo_4step_v0.1），euler/simple，shift 12/3，约快 3 倍
+  "loras": [],                                   # 可选 [["h3_character_swap_v1.5.safetensors", 1.0]]：换人 LoRA，配 videos（原片）+ guides 锁音频
   "vsa": null                                    # 配合 turbo：稀疏注意力比例（如 0.75），要装 ComfyUI-Ref2VA-VSA 节点和 fasth3_vsa_gate.safetensors，且 PyTorch 必须是 CUDA 13 版（cu128 会报 Backend cuda disabled）
 }
 旁白段的 prompt 里不要写任何台词；一次生成只有一个发声来源。
@@ -24,6 +25,9 @@ import comfy
 a = json.load(open(sys.argv[1]))
 p = {"1": {"class_type": "UNETLoader", "inputs": {"unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors", "weight_dtype": "default"}}}
 model = ["1", 0]
+for i, (ln, st) in enumerate(a.get("loras", [])):
+    p[f"8{i}"] = {"class_type": "LoraLoaderModelOnly", "inputs": {"model": model, "lora_name": ln, "strength_model": st}}
+    model = [f"8{i}", 0]
 if a.get("turbo"):
     p["6"] = {"class_type": "LoraLoaderModelOnly", "inputs": {"model": model, "lora_name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors", "strength_model": 1.0}}
     model = ["6", 0]
