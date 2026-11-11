@@ -98,6 +98,10 @@
 
 更快的选择：开源节点 ComfyUI-Ref2VA-VSA 在 4 步之上再加 75% 视频稀疏注意力（参考图和参考音的 token 不裁，脸不漂），作者实测 4090 上 1344×768、5 秒约 72 秒，显存峰值 13.5 GB。要另装自定义节点和 3.85 GB 的 `fasth3_vsa_gate.safetensors`。**前提是 PyTorch 为 CUDA 13 版**：ComfyUI 的 comfy/quant_ops.py 在 `torch.version.cuda < 13` 时会禁用 comfy-kitchen 的 CUDA 后端，cu128 环境运行时报 `Backend 'cuda' is not available: disabled`（2026-11 实测）。
 
+**CUDA 13 环境快一倍（2026-11-12 实测，同一台 4090）**：ComfyUI 0.45.2 + torch 2.9.1+cu130 时，comfy-kitchen 的 CUDA 内核（int8 线性层、RoPE、sol_attn 等）全部启用。同一段 448×608、233 帧 4 步：cu128 + 0.43 要 81–90 秒，cu130 + 0.45.2 只要 36–47 秒，画面和台词与旧环境基本一致。显卡驱动要支持 CUDA 13（610.88 可以）。0.45.2 还自带官方 `FastH3VSAPatch` 节点。
+
+VSA 实测：448×608 下没有提速（36 秒对 36 秒），而且第二个镜头没按锚点出师傅单人近景，变成了两只狗同框，说明它会削弱镜头锚点的控制；576×800 下 82 秒降到 66 秒。小分辨率对话片不用 VSA。
+
 内存：128 GB 内存时，模型文件会留在系统缓存里，ComfyUI 重启后再跑同一段只要 81 秒（几乎不花加载时间）。去掉 `--disable-pinned-memory --disable-async-offload` 对 4 步出片没有可测的提速（85 秒 vs 81 秒），瓶颈在显卡计算。
 
 换人：`h3_character_swap` LoRA 强度 1.0，20 步，源视频作参考视频并锁定音频，不用遮罩。每段最多一个硬切。
@@ -159,6 +163,12 @@ goto loop
 2. 提交端用 `comfy.run()`（各脚本加 `--wait` 时就走它）：每 8 秒查一次 `/system_stats`，连续 4 次（约 1 分钟）都连不上才算断了；恢复后先看任务还在不在，还在就接着等，不在了才把同一个工作流重新提交，最多 3 次。只查一次会把“跑大模型时接口变慢”误判成崩溃，重复提交一份。实测一次改图任务中途崩溃，第 2 次提交自动跑完，没有人工介入。
 
 排查思路：先用 Windows 事件日志确认崩的是不是只有 python。如果系统其他程序也在崩、还有蓝屏，先查硬件（Intel 处理器诊断工具、7-Zip 基准测试、Windows 内存诊断）和系统文件（sfc /verifyonly、DISM /ScanHealth），硬件稳定了再修系统文件。
+
+## 首帧：MiniMax-H3-Image（ComfyUI 0.45+）
+
+脚本 `scripts/h3_image.py`。模型：`minimax_h3_image_pruned_int8_convrot.safetensors`（21 GB）+ `minimax_h3_image_vae_fp16.safetensors`；文本编码器和 H3 视频共用 `qwen3vl_32b_minimax_h3_nvfp4_awq`。节点：MiniMaxH3ImageConditioning（images 动态输入，image_1 = <Picture 1>，width/height 写目标尺寸）→ ConditioningZeroOut 作负面 → KSampler 6 步、cfg 1、euler/simple → VAEDecode。
+
+实测（4090，cu130）：两只狗全景首帧 1728×2368（400 万像素）每张约 29 秒；Qwen-Image-Edit-2511 出 896×1232 每张约 2.4 分钟。H3 Image 一次就把“深棕色杏仁眼、不露眼白”画对了（Qwen 每期都要单独修眼睛），帽子图案和毛发更清楚。缺点：整体偏橙红、更饱和，取景更紧，“屋檐下一盏暖黄色的灯”被画成现代吊灯，要写清“a paper lantern”。不要拿它的输出再改（会发花）。
 
 ## 放大
 
