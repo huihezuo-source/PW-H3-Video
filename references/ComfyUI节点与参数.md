@@ -96,7 +96,9 @@
 
 4 步加速（推荐默认，2026-11 实测）：`LoraLoaderModelOnly` 接 `minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors`（强度 1.0）→ `MiniMaxH3SigmaShift`（video 12，audio 3）→ euler + simple，4 步。448×608 双角色对话，233 帧从 5.0 分钟降到 1.5 分钟，313 帧从 6.5 分钟降到 1.9 分钟；台词逐字正确，构图、动作、口型和 20 步版基本一致。`h3_ref2va.py` 里写 `"turbo": true`。要最高质量再回到 20 步 res_multistep。
 
-更快的选择：开源节点 ComfyUI-Ref2VA-VSA 在 4 步之上再加 75% 视频稀疏注意力（参考图和参考音的 token 不裁，脸不漂），作者实测 4090 上 1344×768、5 秒约 72 秒，显存峰值 13.5 GB。要另装自定义节点和 3.85 GB 的 `fasth3_vsa_gate.safetensors`，还没实测。
+更快的选择：开源节点 ComfyUI-Ref2VA-VSA 在 4 步之上再加 75% 视频稀疏注意力（参考图和参考音的 token 不裁，脸不漂），作者实测 4090 上 1344×768、5 秒约 72 秒，显存峰值 13.5 GB。要另装自定义节点和 3.85 GB 的 `fasth3_vsa_gate.safetensors`。**前提是 PyTorch 为 CUDA 13 版**：ComfyUI 的 comfy/quant_ops.py 在 `torch.version.cuda < 13` 时会禁用 comfy-kitchen 的 CUDA 后端，cu128 环境运行时报 `Backend 'cuda' is not available: disabled`（2026-11 实测）。
+
+内存：128 GB 内存时，模型文件会留在系统缓存里，ComfyUI 重启后再跑同一段只要 81 秒（几乎不花加载时间）。去掉 `--disable-pinned-memory --disable-async-offload` 对 4 步出片没有可测的提速（85 秒 vs 81 秒），瓶颈在显卡计算。
 
 换人：`h3_character_swap` LoRA 强度 1.0，20 步，源视频作参考视频并锁定音频，不用遮罩。每段最多一个硬切。
 
