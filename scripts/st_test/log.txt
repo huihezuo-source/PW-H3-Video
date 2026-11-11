@@ -1,0 +1,4 @@
+11-08 15:40:43 ===== stress test start =====
+11-08 15:40:43 phase1 CPU+RAM: 2 workers x 16 MB for 0 min
+11-08 15:40:50 phase1 CPU+RAM done: 46 loops, 0 compute errors, 0 workers died []
+11-08 15:40:50 ===== SUMMARY compute/worker errors: 0; H3 jobs ok 0/0; results []

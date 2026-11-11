@@ -1,0 +1,2 @@
+time,gpu_temp,gpu_w,gpu_util,gpu_mem_mb,gpu_clock,cpu_busy,cpu_perf_pct,ram_free_mb
+15:40:43,monitor error [Errno 2] No such file or directory: 'nvidia-smi'
