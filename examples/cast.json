@@ -1,0 +1,20 @@
+{
+  "prefix": "cast",
+  "seed": 401,
+  "modes": [
+    "isolated",
+    "continuation"
+  ],
+  "cast": {
+    "hero": {
+      "ref": "refs/ref_hero.wav",
+      "ref_text": "参考音里一字不差的原文。",
+      "text": "要让他说的新台词。"
+    },
+    "villain": {
+      "ref": "refs/ref_villain.wav",
+      "ref_text": "参考音里一字不差的原文。",
+      "text": "要让他说的新台词。"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "prompt": "按 h3-prompt-writing 官方格式写：integrated_multimodal_description / overall_soundscape / non_diegetic_music。旁白段不写任何台词。",
+  "width": 448,
+  "height": 608,
+  "length": 289,
+  "steps": 20,
+  "seed": 7,
+  "prefix": "h3/seg1",
+  "images": ["first_frame_seg1.png", "master_monk.png"],
+  "anchor_frames": [0],
+  "audios": []
+}
