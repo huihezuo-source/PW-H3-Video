@@ -43,3 +43,9 @@ ComfyUI 端需要的模型和自定义节点见 `../references/ComfyUI节点与�
 `h3_ref2va.py` 默认用 nvfp4 文本编码器（`qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors`，15.7GB，不要求 50 系显卡），比 int8 编码器（27GB）省 11GB 内存，速度持平略快。新机器先跑 `h3_model_download.py` 装基础模型，再跑 `h3_model_download_small.py` 补 nvfp4 编码器和 turbo LoRA。要换回 int8 编码器，设环境变量 `H3_CLIP=qwen3vl_32b_minimax_h3_int8_convrot.safetensors`。
 
 2026-11-11 在公司 WJ（4090、32GB 内存）用 5 秒 640×384 20 步实测，热跑：int8 编码器 2.2 分钟，nvfp4 编码器 2.0 分钟，nvfp4 + w6a8 主模型 2.7 分钟（更慢，不用）。冷加载分别约 6.4、5.6、4.0 分钟。页面文件要调到 64GB 以上，否则加载模型时内存见底。
+
+## Windows 新机器装 torch 卡住怎么办
+
+pip 下载 torch 这类 2GB 以上的大包在 Windows 上会无声卡死（文件一直 0 字节）。别重跑 pip，也别删 `%TEMP%\pip-unpack-*` 里上次留下的部分文件：把它拷出来，用 `curl.exe -L -C - --retry 50 --retry-all-errors -o torch.whl <镜像上的 whl 地址>` 续传，再 `pip install torch.whl`。2026-11-11 公司 XW 用这个办法把卡了 70 分钟的安装 35 分钟收尾。
+
+双机并行实测（同日）：farm.py 把两段 5 秒片子分给 WJ 和 XW 同时跑，各自 2 分钟（冷加载那台 4.7 分钟），成功 2 失败 0。
