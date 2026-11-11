@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出片工作台</title>
+<style>
+:root{
+  --bg:#f6f5f2; --card:#ffffff; --ink:#1d1d1b; --sub:#6b6a66; --line:#e4e2dc;
+  --accent:#2f6fde; --ok:#1f9d55; --warn:#c77d0a; --bad:#d23c3c; --bar:#e9e7e1;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#161615; --card:#201f1d; --ink:#ecebe7; --sub:#9b9a95; --line:#34332f;
+  --accent:#6b9cff; --ok:#3cc47a; --warn:#e8a43a; --bad:#ff6b6b; --bar:#2c2b28;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+header h1{font-size:18px;margin:0}
+header .clock{color:var(--sub);font-size:13px;margin-left:auto}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:20px 24px;max-width:1500px;margin:0 auto}
+@media (max-width:1000px){main{grid-template-columns:1fr;padding:16px}}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+h2 small{font-weight:400;color:var(--sub)}
+.machines{display:flex;gap:10px;flex-wrap:wrap}
+.mc{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;min-width:180px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--bad)}
+.dot.on{background:var(--ok)}
+.sub{color:var(--sub);font-size:13px}
+.job{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.job .t{font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--sub);font-size:13px;margin:4px 0 8px}
+.bar{height:10px;background:var(--bar);border-radius:6px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .6s}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.prompt{white-space:pre-wrap;font-size:13px;color:var(--sub);max-height:4.6em;overflow:hidden;cursor:pointer;margin-top:6px}
+.prompt.open{max-height:none;color:var(--ink)}
+button,.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer;text-decoration:none}
+button:hover,.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.danger:hover{border-color:var(--bad);color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.out{border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.out .media{background:#000;display:flex;align-items:center;justify-content:center;min-height:120px}
+.out video,.out img{width:100%;max-height:340px;object-fit:contain;display:block}
+.out audio{width:100%;margin:8px 0}
+.out .info{padding:10px 12px}
+.tag{font-size:12px;padding:1px 8px;border-radius:10px;border:1px solid var(--line)}
+.tag.ok{color:var(--ok);border-color:var(--ok)} .tag.bad{color:var(--bad);border-color:var(--bad)}
+.tag.run{color:var(--accent);border-color:var(--accent)} .tag.wait{color:var(--warn);border-color:var(--warn)}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.steps li:last-child{border:0}
+.ic{width:20px;text-align:center;flex:none}
+.steps .running .nm{font-weight:600;color:var(--accent)}
+.steps .wait .nm{font-weight:600;color:var(--warn)}
+.steps .done .nm{color:var(--sub)}
+.notes div{font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line)}
+textarea{width:100%;min-height:80px;font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)}
+.empty{color:var(--sub);font-size:14px;padding:6px 0}
+.err{color:var(--bad);font-size:13px;margin-top:6px;white-space:pre-wrap}
+.thumbs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.thumbs a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;color:var(--ink);text-decoration:none;font-size:12px}
+.thumbs img,.thumbs video{width:100%;display:block;background:#000}
+.thumbs span{display:block;padding:4px 6px}
+.filter{display:flex;gap:8px;margin-left:auto}
+</style>
+</head>
+<body>
+<header>
+  <h1>出片工作台</h1>
+  <div class="machines" id="machines"></div>
+  <div class="clock" id="clock"></div>
+</header>
+<main>
+  <div>
+    <section>
+      <h2>正在跑 <small id="runsub"></small></h2>
+      <div id="running"></div>
+    </section>
+    <section>
+      <h2>排队中 <small id="pendsub"></small></h2>
+      <div id="pending"></div>
+    </section>
+    <section>
+      <h2>最近出片 <span class="filter"><label class="sub"><input type="checkbox" id="onlyFiles" checked> 只看有成品的</label></span></h2>
+      <p class="sub" style="margin:-6px 0 12px">点提示词可展开全文。“下载工作流”下来的文件，直接拖进 ComfyUI 网页就能打开、改参数、重跑。</p>
+      <div class="gallery" id="gallery"></div>
+    </section>
+  </div>
+  <aside>
+    <section>
+      <h2>Claude 在做什么 <small id="boardsub"></small></h2>
+      <div id="boardTitle" class="t"></div>
+      <ul class="steps" id="steps"></ul>
+    </section>
+    <section id="filesSec" hidden>
+      <h2>本地文件 <small>首帧、草稿等</small></h2>
+      <div class="thumbs" id="files"></div>
+    </section>
+    <section>
+      <h2>过程记录</h2>
+      <div class="notes" id="notes"></div>
+    </section>
+    <section>
+      <h2>给 Claude 留言 <small>它每一步开始前会看</small></h2>
+      <textarea id="fb" placeholder="比如：第 2 张首帧狗的眼神不对 / 先停一下，换个场景"></textarea>
+      <div class="acts"><button id="send">发送</button><span class="sub" id="fbok"></span></div>
+      <div class="notes" id="fblist" style="margin-top:8px"></div>
+    </section>
+  </aside>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dur = s => { if (s == null || !isFinite(s)) return "—"; s = Math.max(0, Math.round(s));
+  const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return h ? `${h}小时${m}分` : m ? `${m}分${String(x).padStart(2,"0")}秒` : `${x}秒`; };
+const hm = t => t ? new Date(t*1000).toLocaleTimeString("zh-CN",{hour12:false}) : "";
+const gb = b => b ? (b/2**30).toFixed(1) + "GB" : "?";
+const open = new Set();
+let lastGallery = "";
+
+function metaLine(j){
+  const a = [];
+  if (j.size) a.push(j.size);
+  if (j.frames) a.push(j.frames + " 帧");
+  if (j.steps) a.push(j.steps + " 步");
+  if (j.seed != null) a.push("种子 " + j.seed);
+  if (j.models && j.models.length) a.push(j.models.map(m => m.replace(/\.safetensors$/,"")).join("、"));
+  return a.map(x => `<span>${esc(x)}</span>`).join("");
+}
+function promptBox(id, text){
+  if (!text) return "";
+  return `<div class="prompt ${open.has(id)?"open":""}" data-id="${esc(id)}">${esc(text)}</div>`;
+}
+
+function renderRunning(ms, now){
+  const rows = [];
+  for (const m of ms) for (const j of (m.running||[])) {
+    const L = j.live || {};
+    const pct = L.max ? Math.round(100*L.value/L.max) : 0;
+    const elapsed = L.start ? now - L.start : null;
+    const left = (L.max && L.sec_per_step) ? (L.max - L.value) * L.sec_per_step : null;
+    const stale = L.updated && now - L.updated > 90;
+    let stage = L.node_type ? `当前节点：${esc(L.node_type)}` : "等待开始或在加载模型";
+    rows.push(`<div class="job">
+      <div class="row"><span class="t">${esc(j.title)}</span><span class="tag run">${esc(m.name)}</span>
+        <span class="sub">提交者 ${esc(j.client||"网页")}</span></div>
+      <div class="meta">${metaLine(j)}</div>
+      ${L.max ? `<div class="row"><span class="big">${L.value} / ${L.max} 步</span><span class="sub">${pct}%</span>
+        <span class="sub">${L.sec_per_step ? L.sec_per_step.toFixed(1)+" 秒/步" : ""}</span>
+        <span class="sub">${left!=null ? "这一段还要约 "+dur(left) : ""}</span></div>
+        <div class="bar"><i style="width:${pct}%"></i></div>` : ""}
+      <div class="sub">${stage}　已跑 ${dur(elapsed)}${stale ? `　<b style="color:var(--warn)">已 ${dur(now-L.updated)} 没有新进度（加载大模型或解码时正常，超过 10 分钟再担心）</b>`:""}
+        ${!j.live ? "　<b>这个任务不是用 mac-claude / h3-video 提交的，看不到步数</b>" : ""}</div>
+      ${promptBox(j.id, j.text)}
+      <div class="acts">
+        <a class="btn" href="/api/workflow?m=${encodeURIComponent(m.name)}&id=${j.id}">下载工作流</a>
+        <a class="btn" href="${esc(m.url)}" target="_blank">打开 ComfyUI</a>
+        <button class="danger" onclick="act('interrupt','${esc(m.name)}','${j.id}','停止正在跑的这条？')">停止</button>
+      </div></div>`);
+  }
+  $("running").innerHTML = rows.join("") || `<div class="empty">现在没有任务在跑。</div>`;
+  $("runsub").textContent = rows.length ? `${rows.length} 条` : "";
+}
+
+function renderPending(ms){
+  const rows = [];
+  for (const m of ms) (m.pending||[]).forEach((j,i) => rows.push(`<div class="job">
+      <div class="row"><span class="t">第 ${i+1} 位：${esc(j.title)}</span><span class="tag wait">${esc(m.name)}</span></div>
+      <div class="meta">${metaLine(j)}</div>${promptBox(j.id, j.text)}
+      <div class="acts"><a class="btn" href="/api/workflow?m=${encodeURIComponent(m.name)}&id=${j.id}">下载工作流</a>
+      <button class="danger" onclick="act('delete','${esc(m.name)}','${j.id}','从队列里删掉这条？')">删掉</button></div></div>`));
+  $("pending").innerHTML = rows.join("") || `<div class="empty">队列是空的。</div>`;
+  $("pendsub").textContent = rows.length ? `${rows.length} 条` : "";
+}
+
+function mediaUrl(m, f){
+  return `/api/view?m=${encodeURIComponent(m)}&filename=${encodeURIComponent(f.filename)}&subfolder=${encodeURIComponent(f.subfolder)}&type=${f.type}`;
+}
+function renderGallery(ms){
+  const only = $("onlyFiles").checked;
+  const items = [];
+  for (const m of ms) for (const h of (m.history||[])) items.push([m, h]);
+  items.sort((a,b) => (b[1].end||b[1].start||0) - (a[1].end||a[1].start||0));
+  const html = items.filter(([m,h]) => !only || h.files.length || h.status==="error").slice(0, 30).map(([m,h]) => {
+    const vis = h.files.filter(f => f.type === "output");
+    const show = (vis.length ? vis : h.files).slice(0, 4);
+    const media = show.map(f => f.kind==="video" ? `<video src="${mediaUrl(m.name,f)}" controls preload="metadata"></video>`
+      : f.kind==="audio" ? `<audio src="${mediaUrl(m.name,f)}" controls preload="none"></audio>`
+      : `<a href="${mediaUrl(m.name,f)}" target="_blank"><img src="${mediaUrl(m.name,f)}" loading="lazy"></a>`).join("");
+    const st = h.status==="success" ? `<span class="tag ok">完成</span>` : h.status==="error" ? `<span class="tag bad">出错</span>` : `<span class="tag">${esc(h.status)}</span>`;
+    const took = h.start && h.end ? "用时 " + dur(h.end - h.start) : "";
+    return `<div class="out">${media ? `<div class="media">${media}</div>` : ""}
+      <div class="info"><div class="row"><span class="t">${esc(h.title)}</span>${st}</div>
+      <div class="meta"><span>${esc(m.name)}</span><span>${hm(h.end||h.start)}</span><span>${took}</span>${metaLine(h)}</div>
+      ${h.error ? `<div class="err">${esc(h.error)}</div>`:""}
+      ${promptBox(h.id, h.text)}
+      <div class="acts"><a class="btn" href="/api/workflow?m=${encodeURIComponent(m.name)}&id=${h.id}">下载工作流</a>
+      ${show.map(f => `<a class="btn" href="${mediaUrl(m.name,f)}" download="${esc(f.filename)}">下载 ${esc(f.filename.slice(-18))}</a>`).join("")}
+      <button onclick="quote('${esc(h.title)}')">对这条留言</button></div></div></div>`;
+  }).join("") || `<div class="empty">还没有出片记录。</div>`;
+  if (html !== lastGallery) { $("gallery").innerHTML = html; lastGallery = html; }  // 不变就不重画，免得视频被打断
+}
+
+const ICON = {done:"✅", running:"⏳", wait:"🙋", failed:"❌", pending:"○"};
+function renderBoard(b, fb, now){
+  $("boardTitle").textContent = b.title || "";
+  const steps = b.steps || [];
+  $("steps").innerHTML = steps.map(s => `<li class="${s.status}"><span class="ic">${ICON[s.status]||"○"}</span>
+    <div><div class="nm">${esc(s.name)}${s.status==="wait"?"（等你确认）":""}</div>
+    ${s.detail ? `<div class="sub">${esc(s.detail)}</div>`:""}
+    ${s.status==="running" && s.since ? `<div class="sub">已进行 ${dur(now - s.since)}</div>` :
+      s.end && s.since && s.end - s.since > 2 ? `<div class="sub">用时 ${dur(s.end - s.since)}</div>`:""}</div></li>`).join("")
+    || `<li class="sub">还没有任务。</li>`;
+  $("boardsub").textContent = b.updated ? "更新于 " + hm(b.updated) : "";
+  const files = (b.files||[]).slice().reverse();
+  $("filesSec").hidden = !files.length;
+  const fh = files.map(f => { const u = "/api/local?path=" + encodeURIComponent(f.path);
+    const isV = /\.(mp4|mov|webm)$/i.test(f.path);
+    return `<a href="${u}" target="_blank">${isV ? `<video src="${u}" muted preload="metadata"></video>` : `<img src="${u}" loading="lazy">`}<span>${esc(f.label)}</span></a>`; }).join("");
+  if ($("files").dataset.h !== fh) { $("files").innerHTML = fh; $("files").dataset.h = fh; }
+  $("notes").innerHTML = (b.notes||[]).slice(-15).reverse().map(n => `<div><span class="sub">${hm(n.time)}</span>　${esc(n.text)}</div>`).join("")
+    || `<div class="sub">暂无</div>`;
+  $("fblist").innerHTML = (fb||[]).slice(-5).reverse().map(x => `<div><span class="sub">${esc(x.time)}</span>　${esc(x.text)}</div>`).join("");
+}
+
+function renderMachines(ms, now){
+  $("machines").innerHTML = ms.map(m => {
+    const on = m.online;
+    const v = on && m.vram_total ? `显存空 ${gb(m.vram_free)} / ${gb(m.vram_total)}` : on ? "" : "连不上（没开或 Tailscale 断了）";
+    return `<div class="mc"><span class="dot ${on?"on":""}"></span><b>${esc(m.name)}</b>
+      <div class="sub">${esc(v)}${on ? `　排队 ${(m.running||[]).length + (m.pending||[]).length}` : ""}</div></div>`;
+  }).join("");
+}
+
+async function tick(){
+  try {
+    const s = await (await fetch("/api/state")).json();
+    renderMachines(s.machines, s.now);
+    renderRunning(s.machines, s.now);
+    renderPending(s.machines);
+    renderGallery(s.machines);
+    renderBoard(s.board || {}, s.feedback, s.now);
+    $("clock").textContent = "刷新于 " + hm(s.now);
+  } catch (e) { $("clock").textContent = "工作台服务没响应：" + e; }
+}
+async function act(kind, m, id, ask){
+  if (!confirm(ask)) return;
+  const r = await fetch("/api/" + kind, {method:"POST", body: JSON.stringify({m, id})});
+  if (!r.ok) alert("没成功：" + (await r.text()));
+  tick();
+}
+function quote(t){ $("fb").value = `【${t}】` + $("fb").value; $("fb").focus(); }
+$("send").onclick = async () => {
+  const text = $("fb").value.trim(); if (!text) return;
+  await fetch("/api/feedback", {method:"POST", body: JSON.stringify({text})});
+  $("fb").value = ""; $("fbok").textContent = "已发送"; setTimeout(() => $("fbok").textContent = "", 2000); tick();
+};
+document.addEventListener("click", e => {
+  const p = e.target.closest(".prompt"); if (!p) return;
+  const id = p.dataset.id; open.has(id) ? open.delete(id) : open.add(id); p.classList.toggle("open"); lastGallery = "";
+});
+$("onlyFiles").onchange = () => { lastGallery = ""; tick(); };
+tick(); setInterval(tick, 1500);
+</script>
+</body>
+</html>
