@@ -4,7 +4,7 @@
   spec.json        系列设定：角色、音色、示例提示词、镜头切点、步数（见 workflows/两只狗师徒段子/spec.json）
   素材/            示例首帧、角色参考图、音色（分享时一起打包，朋友上传到 ComfyUI 的 input 即可）
 生成：
-  1_首帧.json      Qwen-Image-Edit-2511：场景描述 + 角色参考图 → 首帧候选
+  1_首帧.json      MiniMax-H3-Image（ComfyUI 0.45+）：英文场景描述 + 角色参考图 → 400 万像素首帧候选
   2_对话视频.json  MiniMax H3 Ref2VA：首帧 + 近景 + 两个音色 + 台词提示词 → 带声音的视频（可选 2 倍放大）
 
 用法：
@@ -20,13 +20,16 @@ HF = "https://huggingface.co"
 SIZES = {"minimax_h3_ref2va_pruned_int8_convrot.safetensors": 21.0, "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors": 15.7,
          "minimax_h3_video_vae_int8_convrot.safetensors": 2.8, "minimax_h3_audio_vae_fp32.safetensors": 0.6,
          "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors": 2.0, "qwen_image_edit_2511_fp8mixed.safetensors": 20.5,
-         "qwen_2.5_vl_7b_fp8_scaled.safetensors": 9.4, "qwen_image_vae.safetensors": 0.25, "RealESRGAN_x2plus.pth": 0.07}  # GB
+         "qwen_2.5_vl_7b_fp8_scaled.safetensors": 9.4, "qwen_image_vae.safetensors": 0.25, "RealESRGAN_x2plus.pth": 0.07,
+         "minimax_h3_image_pruned_int8_convrot.safetensors": 21.0, "minimax_h3_image_vae_fp16.safetensors": 1.2}  # GB
 MODELS = {  # 文件名: (下载地址, 放到 models/ 下哪个目录)
     "minimax_h3_ref2va_pruned_int8_convrot.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors", "diffusion_models"),
     "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors", "text_encoders"),
     "minimax_h3_video_vae_int8_convrot.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_int8_convrot.safetensors", "vae"),
     "minimax_h3_audio_vae_fp32.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors", "vae"),
     "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors": (f"{HF}/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors", "loras"),
+    "minimax_h3_image_pruned_int8_convrot.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3-Image/resolve/main/diffusion_models/minimax_h3_image_pruned_int8_convrot.safetensors", "diffusion_models"),
+    "minimax_h3_image_vae_fp16.safetensors": (f"{HF}/Comfy-Org/MiniMax-H3-Image/resolve/main/vae/minimax_h3_image_vae_fp16.safetensors", "vae"),
     "qwen_image_edit_2511_fp8mixed.safetensors": (f"{HF}/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors", "diffusion_models"),
     "qwen_2.5_vl_7b_fp8_scaled.safetensors": (f"{HF}/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors", "text_encoders"),
     "qwen_image_vae.safetensors": (f"{HF}/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors", "vae"),
@@ -95,29 +98,33 @@ def video_api(s, names):
 
 
 def frame_api(s, names):
+    """首帧：MiniMax-H3-Image 多图参考出图（ComfyUI 0.45+）。图1 决定构图和尺寸参考，提示词用英文的改图结构写。"""
     f = s["first_frame"]
+    w, h = f.get("size", [1728, 2368])
     p, T = {}, {}
-    p["1"] = {"class_type": "UNETLoader", "inputs": {"unet_name": "qwen_image_edit_2511_fp8mixed.safetensors", "weight_dtype": "fp8_e4m3fn"}}
-    p["2"] = {"class_type": "CLIPLoader", "inputs": {"clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image"}}
-    p["3"] = {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_vae.safetensors"}}
-    p["4"] = {"class_type": "ModelSamplingAuraFlow", "inputs": {"model": ["1", 0], "shift": 3.1}}
-    p["5"] = {"class_type": "CFGNorm", "inputs": {"model": ["4", 0], "strength": 1.0}}
-    T.update({"1": ("模型", "Qwen 改图模型（weight_dtype 要选 fp8_e4m3fn）"), "2": ("模型", "文本编码器"), "3": ("模型", "VAE"),
-              "4": ("模型", "采样偏移"), "5": ("模型", "CFG 归一")})
-    enc = {"clip": ["2", 0], "vae": ["3", 0]}
-    for i, im in enumerate(f["images"][:3]):
-        nid = str(20 + i)
-        p[nid] = {"class_type": "LoadImage", "inputs": {"image": names[im["file"]]}}
-        T[nid] = ("素材", f"图{i + 1}：{im['label']}")
-        enc[f"image{i + 1}"] = [nid, 0]
-    p["11"] = {"class_type": "TextEncodeQwenImageEditPlus", "inputs": {**enc, "prompt": f["prompt"]}}
-    p["12"] = {"class_type": "TextEncodeQwenImageEditPlus", "inputs": {**enc, "prompt": ""}}
-    T["11"], T["12"] = ("台词", "首帧描述（场景、角色、站位、眼神都写在这里）"), ("台词", "反向（留空）")
-    p["13"] = {"class_type": "VAEEncode", "inputs": {"pixels": ["20", 0], "vae": ["3", 0]}}
-    p["14"] = {"class_type": "RepeatLatentBatch", "inputs": {"samples": ["13", 0], "amount": f.get("count", 2)}}
-    p["15"] = {"class_type": "KSampler", "inputs": {"model": ["5", 0], "positive": ["11", 0], "negative": ["12", 0], "latent_image": ["14", 0],
-               "seed": f.get("seed", 9101), "steps": 30, "cfg": 4.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}}
-    T["13"], T["14"], T["15"] = ("生成", "按图1的尺寸出图"), ("生成", "一次出几张候选"), ("生成", "采样（换种子重抽）")
+    p["1"] = {"class_type": "UNETLoader", "inputs": {"unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors", "weight_dtype": "default"}}
+    p["2"] = {"class_type": "CLIPLoader", "inputs": {"clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors", "type": "minimax", "device": "default"}}
+    p["3"] = {"class_type": "VAELoader", "inputs": {"vae_name": "minimax_h3_image_vae_fp16.safetensors"}}
+    T.update({"1": ("模型", "H3 Image 主模型"), "2": ("模型", "文本编码器（和 H3 视频共用）"), "3": ("模型", "H3 Image VAE")})
+    cond = {"clip": ["2", 0], "vae": ["3", 0], "prompt": f["prompt"], "width": w, "height": h}
+    for i, im in enumerate(f["images"][:16]):
+        lid, sid = str(20 + i * 2), str(21 + i * 2)
+        p[lid] = {"class_type": "LoadImage", "inputs": {"image": names[im["file"]]}}
+        T[lid] = ("素材", f"图{i + 1}（<Picture {i + 1}>）：{im['label']}")
+        if i == 0:   # 低分辨率参考效果差，先放大到出图尺寸
+            p[sid] = {"class_type": "ImageScale", "inputs": {"image": [lid, 0], "upscale_method": "lanczos", "width": w, "height": h, "crop": "center"}}
+        else:
+            p[sid] = {"class_type": "ImageScaleToTotalPixels", "inputs": {"image": [lid, 0], "upscale_method": "lanczos",
+                                                                          "megapixels": round(w * h / 1e6, 2), "resolution_steps": 32}}
+        T[sid] = ("素材", f"图{i + 1} 放大到约 {w * h / 1e6:.0f} 百万像素")
+        cond[f"images.image_{i + 1}"] = [sid, 0]
+    p["11"] = {"class_type": "MiniMaxH3ImageConditioning", "inputs": cond}
+    p["12"] = {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["11", 0]}}
+    T["11"], T["12"] = ("台词", "首帧描述（英文，场景、角色、站位、眼神、光都写在这里）"), ("台词", "反向（自动置空）")
+    # H3 Image 只支持一次 1 张：要几张候选，就把运行次数改成几，种子设成随机
+    p["15"] = {"class_type": "KSampler", "inputs": {"model": ["1", 0], "positive": ["11", 0], "negative": ["12", 0], "latent_image": ["11", 1],
+               "seed": f.get("seed", 9101), "steps": 6, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}}
+    T["15"] = ("生成", "采样（6 步；一次 1 张，换种子重抽）")
     p["16"] = {"class_type": "VAEDecode", "inputs": {"samples": ["15", 0], "vae": ["3", 0]}}
     p["17"] = {"class_type": "SaveImage", "inputs": {"images": ["16", 0], "filename_prefix": f.get("prefix", "series/frame")}}
     T["16"], T["17"] = ("输出", "解码"), ("输出", "保存首帧候选")
@@ -182,7 +189,7 @@ def to_canvas(prompt, tags, notes, url):
 def readme(d, s, out):
     """写分享用的 使用说明.txt：要哪些模型、放哪、怎么用。"""
     L = [f"《{s['name']}》ComfyUI 工作流", "=" * 30, "",
-         "需要：ComfyUI 0.43 或更新（自带 MiniMax H3 节点），显卡 24 GB（4090 实测），内存 64 GB 以上更稳。不用装任何自定义节点。", "",
+         "需要：ComfyUI 0.45 或更新（自带 MiniMax H3 和 H3 Image 节点），显卡 24 GB（4090 实测），内存 64 GB 以上更稳。不用装任何自定义节点。PyTorch 用 CUDA 13 版（cu130）时 ComfyUI 的加速内核全开，出片快一倍。", "",
          "一、安装", "1. 把 素材/ 里的图片和音频上传到 ComfyUI（或直接拷到 ComfyUI/input/）。",
          "2. 把 1_首帧.json、2_对话视频.json 拖进 ComfyUI 网页。缺模型时会弹窗，点下载即可；也可以按下表手动下载放到对应目录。", ""]
     for key, (p, _) in out.items():
@@ -197,7 +204,7 @@ def readme(d, s, out):
             L.append(f"    {MODELS[fn][0]}")
         L.append("")
     L += ["二、每期怎么用", "工作流画布最左边一列是说明，打开先看。简单说：",
-          "1. 打开 1_首帧：换场景描述，出 2 张候选，挑一张；在挑好的全景上裁出两张近景。",
+          "1. 打开 1_首帧：换英文场景描述，每次出 1 张 400 万像素候选（约 30 秒），运行次数改成 2、种子设随机就是 2 张；挑一张，在上面裁出两张近景。",
           "2. 打开 2_对话视频：换首帧和近景，改 H3 提示词里的台词和镜头，按切点设镜头锚点，运行。",
           "3. 一段最长 15 秒；更长就分段出，再在剪辑软件里拼接、加字幕。", "",
           "三、示例素材", "素材/ 里是第九期《初心》的首帧和两只狗的音色，直接运行就能复现那一段（第一段 13 秒）。"]
