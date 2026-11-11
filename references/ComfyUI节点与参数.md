@@ -94,6 +94,10 @@
 - 加 Pika H3 Flex LoRA（lcm + 7 个手动 sigma）576×800 下 10.8 秒约 3.5 分钟，适合出草稿。
 - 576×800 不加速时显存溢出，可能要几个小时，先用低分辨率。
 
+4 步加速（推荐默认，2026-11 实测）：`LoraLoaderModelOnly` 接 `minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors`（强度 1.0）→ `MiniMaxH3SigmaShift`（video 12，audio 3）→ euler + simple，4 步。448×608 双角色对话，233 帧从 5.0 分钟降到 1.5 分钟，313 帧从 6.5 分钟降到 1.9 分钟；台词逐字正确，构图、动作、口型和 20 步版基本一致。`h3_ref2va.py` 里写 `"turbo": true`。要最高质量再回到 20 步 res_multistep。
+
+更快的选择：开源节点 ComfyUI-Ref2VA-VSA 在 4 步之上再加 75% 视频稀疏注意力（参考图和参考音的 token 不裁，脸不漂），作者实测 4090 上 1344×768、5 秒约 72 秒，显存峰值 13.5 GB。要另装自定义节点和 3.85 GB 的 `fasth3_vsa_gate.safetensors`，还没实测。
+
 换人：`h3_character_swap` LoRA 强度 1.0，20 步，源视频作参考视频并锁定音频，不用遮罩。每段最多一个硬切。
 
 ## 多镜头复刻原片：首帧锚定，不带参考视频
