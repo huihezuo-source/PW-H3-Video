@@ -13,7 +13,8 @@ job.json：
   "audios": [],                                  # 参考音：说话角色的声音参考；旁白段留空
   "videos": [],                                  # 可选，参考视频（24fps、2–15 秒）：提供镜头运动、切镜和动作，提示词里叫 <Video 1>
   "shift": null,                                 # 可选 [video, audio]，一般不用
-  "turbo": false                                 # true = 4 步加速 LoRA（minimax_h3_ref2v_turbo_4step_v0.1），euler/simple，shift 12/3，约快 5 倍
+  "turbo": false,                                # true = 4 步加速 LoRA（minimax_h3_ref2v_turbo_4step_v0.1），euler/simple，shift 12/3，约快 3 倍
+  "vsa": null                                    # 配合 turbo：稀疏注意力比例（如 0.75），要装 ComfyUI-Ref2VA-VSA 节点和 fasth3_vsa_gate.safetensors，且 PyTorch 必须是 CUDA 13 版（cu128 会报 Backend cuda disabled）
 }
 旁白段的 prompt 里不要写任何台词；一次生成只有一个发声来源。
 """
@@ -26,6 +27,9 @@ model = ["1", 0]
 if a.get("turbo"):
     p["6"] = {"class_type": "LoraLoaderModelOnly", "inputs": {"model": model, "lora_name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors", "strength_model": 1.0}}
     model = ["6", 0]
+    if a.get("vsa"):
+        p["7"] = {"class_type": "Ref2VAVSAGatePatch", "inputs": {"model": model, "gate_file": "fasth3_vsa_gate.safetensors", "sparsity": a["vsa"]}}
+        model = ["7", 0]
     a.setdefault("shift", [12, 3])
     a.setdefault("steps", 4)
 if a.get("shift"):
