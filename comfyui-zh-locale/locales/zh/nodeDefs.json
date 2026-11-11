@@ -1,0 +1,527 @@
+{
+ "MiniMaxH3ReferenceToVideo": {
+  "display_name": "H3 参考生视频（Ref2VA）",
+  "inputs": {
+   "clip": {
+    "name": "文本编码器"
+   },
+   "prompt": {
+    "name": "提示词"
+   },
+   "width": {
+    "name": "宽度"
+   },
+   "height": {
+    "name": "高度"
+   },
+   "length": {
+    "name": "帧数（24fps）"
+   },
+   "ref_image_size": {
+    "name": "参考图尺寸"
+   },
+   "vae": {
+    "name": "视频VAE"
+   },
+   "audio_vae": {
+    "name": "音频VAE"
+   },
+   "ref_images": {
+    "name": "参考图"
+   },
+   "ref_videos": {
+    "name": "参考视频"
+   },
+   "ref_video_audios": {
+    "name": "参考视频音轨"
+   },
+   "ref_audios": {
+    "name": "参考音"
+   },
+   "ref_image_0": {
+    "name": "参考图 1"
+   },
+   "ref_image_1": {
+    "name": "参考图 2"
+   },
+   "ref_image_2": {
+    "name": "参考图 3"
+   },
+   "ref_image_3": {
+    "name": "参考图 4"
+   },
+   "ref_image_4": {
+    "name": "参考图 5"
+   },
+   "ref_image_5": {
+    "name": "参考图 6"
+   },
+   "ref_image_6": {
+    "name": "参考图 7"
+   },
+   "ref_image_7": {
+    "name": "参考图 8"
+   },
+   "ref_image_8": {
+    "name": "参考图 9"
+   },
+   "ref_video_0": {
+    "name": "参考视频 1"
+   },
+   "ref_video_audio_0": {
+    "name": "参考视频音轨 1"
+   },
+   "ref_audio_0": {
+    "name": "参考音 1"
+   },
+   "ref_video_1": {
+    "name": "参考视频 2"
+   },
+   "ref_video_audio_1": {
+    "name": "参考视频音轨 2"
+   },
+   "ref_audio_1": {
+    "name": "参考音 2"
+   },
+   "ref_video_2": {
+    "name": "参考视频 3"
+   },
+   "ref_video_audio_2": {
+    "name": "参考视频音轨 3"
+   },
+   "ref_audio_2": {
+    "name": "参考音 3"
+   },
+   "ref_images_ref_image_0": {
+    "name": "参考图 1"
+   },
+   "ref_images_ref_image_1": {
+    "name": "参考图 2"
+   },
+   "ref_images_ref_image_2": {
+    "name": "参考图 3"
+   },
+   "ref_images_ref_image_3": {
+    "name": "参考图 4"
+   },
+   "ref_images_ref_image_4": {
+    "name": "参考图 5"
+   },
+   "ref_images_ref_image_5": {
+    "name": "参考图 6"
+   },
+   "ref_images_ref_image_6": {
+    "name": "参考图 7"
+   },
+   "ref_images_ref_image_7": {
+    "name": "参考图 8"
+   },
+   "ref_images_ref_image_8": {
+    "name": "参考图 9"
+   },
+   "ref_videos_ref_video_0": {
+    "name": "参考视频 1"
+   },
+   "ref_video_audios_ref_video_audio_0": {
+    "name": "参考视频音轨 1"
+   },
+   "ref_audios_ref_audio_0": {
+    "name": "参考音 1"
+   },
+   "ref_videos_ref_video_1": {
+    "name": "参考视频 2"
+   },
+   "ref_video_audios_ref_video_audio_1": {
+    "name": "参考视频音轨 2"
+   },
+   "ref_audios_ref_audio_1": {
+    "name": "参考音 2"
+   },
+   "ref_videos_ref_video_2": {
+    "name": "参考视频 3"
+   },
+   "ref_video_audios_ref_video_audio_2": {
+    "name": "参考视频音轨 3"
+   },
+   "ref_audios_ref_audio_2": {
+    "name": "参考音 3"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "正向条件"
+   },
+   "1": {
+    "name": "潜空间"
+   }
+  }
+ },
+ "MiniMaxH3AddGuide": {
+  "display_name": "H3 加关键帧/锁台词",
+  "inputs": {
+   "positive": {
+    "name": "正向条件"
+   },
+   "latent": {
+    "name": "潜空间"
+   },
+   "frame_idx": {
+    "name": "帧位置"
+   },
+   "vae": {
+    "name": "视频VAE"
+   },
+   "audio_vae": {
+    "name": "音频VAE"
+   },
+   "image": {
+    "name": "关键帧图"
+   },
+   "audio": {
+    "name": "台词音频"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "正向条件"
+   }
+  }
+ },
+ "MiniMaxH3SigmaShift": {
+  "display_name": "H3 采样偏移",
+  "inputs": {
+   "model": {
+    "name": "模型"
+   },
+   "shift_video": {
+    "name": "视频偏移"
+   },
+   "shift_audio": {
+    "name": "音频偏移"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "模型"
+   }
+  }
+ },
+ "MiniMaxH3ImageToVideo": {
+  "display_name": "H3 图生视频（首尾帧）",
+  "inputs": {
+   "clip": {
+    "name": "文本编码器"
+   },
+   "vae": {
+    "name": "视频VAE"
+   },
+   "prompt": {
+    "name": "提示词"
+   },
+   "width": {
+    "name": "宽度"
+   },
+   "height": {
+    "name": "高度"
+   },
+   "length": {
+    "name": "帧数（24fps）"
+   },
+   "first_frame": {
+    "name": "首帧"
+   },
+   "last_frame": {
+    "name": "尾帧"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "正向条件"
+   },
+   "1": {
+    "name": "潜空间"
+   }
+  }
+ },
+ "EmptyMiniMaxH3LatentAV": {
+  "display_name": "H3 空音视频潜空间",
+  "inputs": {
+   "width": {
+    "name": "宽度"
+   },
+   "height": {
+    "name": "高度"
+   },
+   "length": {
+    "name": "帧数"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "潜空间"
+   }
+  }
+ },
+ "MiniMaxH3FunControlNetApply": {
+  "display_name": "H3 应用 Fun ControlNet",
+  "inputs": {
+   "model": {
+    "name": "模型"
+   },
+   "model_patch": {
+    "name": "模型补丁"
+   },
+   "vae": {
+    "name": "视频VAE"
+   },
+   "strength": {
+    "name": "强度"
+   },
+   "start_percent": {
+    "name": "开始比例"
+   },
+   "end_percent": {
+    "name": "结束比例"
+   },
+   "control_video": {
+    "name": "控制视频"
+   },
+   "mask": {
+    "name": "遮罩"
+   },
+   "source_video": {
+    "name": "源视频"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "模型"
+   }
+  }
+ },
+ "MiniMaxH3TurboLoRA": {
+  "display_name": "H3 加速 LoRA",
+  "inputs": {
+   "model": {
+    "name": "模型"
+   },
+   "lora_name": {
+    "name": "LoRA 名称"
+   },
+   "strength": {
+    "name": "强度"
+   },
+   "low_vram": {
+    "name": "省显存"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "模型"
+   }
+  }
+ },
+ "MiniMaxH3TurboSampler": {
+  "display_name": "H3 加速采样器（4 步）",
+  "outputs": {
+   "0": {
+    "name": "采样器"
+   }
+  }
+ },
+ "VoxCPM_TTS": {
+  "display_name": "VoxCPM 文字转语音",
+  "inputs": {
+   "model_name": {
+    "name": "模型"
+   },
+   "lora_name": {
+    "name": "LoRA 名称"
+   },
+   "text": {
+    "name": "要说的文字"
+   },
+   "voice_design": {
+    "name": "声音设计描述"
+   },
+   "cfg": {
+    "name": "引导强度"
+   },
+   "steps": {
+    "name": "步数"
+   },
+   "normalize_text": {
+    "name": "规范化文字"
+   },
+   "seed": {
+    "name": "种子"
+   },
+   "force_offload": {
+    "name": "用完卸载"
+   },
+   "device": {
+    "name": "设备"
+   },
+   "dtype": {
+    "name": "精度"
+   },
+   "voice_config": {
+    "name": "克隆声音"
+   },
+   "advanced_params": {
+    "name": "高级参数"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "生成的音频"
+   }
+  }
+ },
+ "VoxCPM_VoiceCloning": {
+  "display_name": "VoxCPM 声音克隆",
+  "inputs": {
+   "trim_silence": {
+    "name": "去掉静音"
+   },
+   "prompt_text": {
+    "name": "参考音原文"
+   },
+   "prompt_audio": {
+    "name": "续写参考音"
+   },
+   "reference_audio": {
+    "name": "参考音"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "克隆声音"
+   }
+  }
+ },
+ "VoxCPM_AdvancedParams": {
+  "display_name": "VoxCPM 高级参数",
+  "inputs": {
+   "min_tokens": {
+    "name": "最少 token"
+   },
+   "max_tokens": {
+    "name": "最多 token"
+   },
+   "temperature": {
+    "name": "随机度"
+   },
+   "sway": {
+    "name": "摆动"
+   },
+   "use_cfg_zero_star": {
+    "name": "使用 CFG-Zero*"
+   },
+   "retry_max_attempts": {
+    "name": "最多重试次数"
+   },
+   "retry_threshold": {
+    "name": "重试阈值"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "高级参数"
+   }
+  }
+ },
+ "VoxCPM_TrainConfig": {
+  "display_name": "VoxCPM 训练设置",
+  "inputs": {
+   "learning_rate": {
+    "name": "学习率"
+   },
+   "lora_rank": {
+    "name": "LoRA 秩"
+   },
+   "lora_alpha": {
+    "name": "LoRA alpha"
+   },
+   "lora_dropout": {
+    "name": "LoRA dropout"
+   },
+   "warmup_steps": {
+    "name": "预热步数"
+   },
+   "grad_accum_steps": {
+    "name": "梯度累积步数"
+   },
+   "max_batch_tokens": {
+    "name": "每批最多 token"
+   },
+   "sample_rate": {
+    "name": "采样率"
+   },
+   "weight_decay": {
+    "name": "权重衰减"
+   },
+   "enable_lm_lora": {
+    "name": "训练语言模型 LoRA"
+   },
+   "enable_dit_lora": {
+    "name": "训练 DiT LoRA"
+   },
+   "enable_proj_lora": {
+    "name": "训练投影层 LoRA"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "训练设置"
+   }
+  }
+ },
+ "VoxCPM_DatasetMaker": {
+  "display_name": "VoxCPM 制作数据集",
+  "inputs": {
+   "audio_directory": {
+    "name": "音频文件夹"
+   },
+   "output_filename": {
+    "name": "输出文件名"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "数据集路径"
+   }
+  }
+ },
+ "VoxCPM_LoraTrainer": {
+  "display_name": "VoxCPM 训练 LoRA",
+  "inputs": {
+   "base_model_name": {
+    "name": "底模"
+   },
+   "train_config": {
+    "name": "训练设置"
+   },
+   "dataset_path": {
+    "name": "数据集路径"
+   },
+   "output_name": {
+    "name": "输出名称"
+   },
+   "max_steps": {
+    "name": "最多步数"
+   },
+   "save_every_steps": {
+    "name": "每隔几步保存"
+   },
+   "num_workers": {
+    "name": "读取线程数"
+   }
+  },
+  "outputs": {
+   "0": {
+    "name": "LoRA 输出路径"
+   }
+  }
+ }
+}
