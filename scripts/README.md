@@ -17,6 +17,7 @@ export COMFY_URL=http://127.0.0.1:8188
 | 克隆各角色原声 | `python3 clone_cast.py ../examples/cast.json --wait out/cast` |
 | 配音 | `python3 tts_clone.py ../examples/voice.json --wait out/voice` |
 | 核对配音 | `python3 asr.py out/voice/*.flac` |
+| 出首帧（H3 Image，ComfyUI 0.45+） | `python3 h3_image.py "英文提示词" --img 角色参考.png --img 特写.png --size 1728x2368 --seeds 1,2 --wait out/frames`：400 万像素一张约 30 秒 |
 | 生成视频 | `python3 h3_ref2va.py ../examples/h3_job.json --wait out/video`（job 里加 `"turbo": true` 走 4 步加速，约快 3 倍） |
 | 把一个系列做成可分享的 ComfyUI 工作流 | `python3 series_workflow.py <系列文件夹> --install --run 2`：读 `spec.json`，生成带中文分组、说明和模型下载链接的 `1_首帧.json`、`2_对话视频.json`，存进 ComfyUI「工作流 → 系列工作流」，`--run` 按工作流原样试跑一次 |
 | 多机并行出片 | `python3 farm.py jobs.json out/farm`：把一批任务分给几台 ComfyUI 同时跑（机器列表 `farm_machines.json`，谁空闲谁接下一条，失败自动换机重试一次） |
