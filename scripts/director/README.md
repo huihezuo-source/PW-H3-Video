@@ -52,6 +52,20 @@
 - **提示词**：用 `integrated_multimodal_description` 格式，按“0-0.6秒：…”逐段写，台词写成 `(S1) says: <d>[Chinese] 台词</d>`。
 - **实测**：544×960，12 秒两段约 5 分钟。五句台词全部念对，说话人全对。每句的时间点只能大致控制。
 
+## 3C. 打样走位：T8 画框（`visual_marker_job.py`）
+
+借用 [T8 节点包](https://github.com/T8mars/comfyui-minimax-h3-audio-T8) 的两个节点：`MiniMaxH3VisualMarkerPrepareEXPT8` 在参考图上画框，`MiniMaxH3VisualMarkerPromptEXPT8` 把框的含义写进提示词。后面接普通的 H3 Ref2VA，不需要新模型；5 秒约 1 分钟。
+
+- 每个人物框都必须连一条 relation 到一个目标框。不动的角色不画框，写进场景描述。
+- 目标框画在认得出的物体上（门、桌子、某个人）。画在空地上会失败：H3 会重新构图，地面区域的坐标对不上。
+- 实测框没有漏进视频。
+
+## 3D. 对照：ComfyUI 原生 InfiniteTalk（`infinitetalk_job.py`）
+
+Wan2.1 I2V 14B + InfiniteTalk 多人补丁，每个说话人一张遮罩、一条音轨，每段 81 帧续接。
+
+**限制**：原生节点两人模式写死为 add，必须第一个人说完、第二个人再说，不能轮流。实测第一段口型正确，第二段起嘴会放到错的人身上；每接一段，人物会被拉回起始姿势。480×832 下 6.8 秒约 6.5 分钟，比 H3 慢。对白片继续用 H3。
+
 ## 4. 检查
 
 - `speaker_strip.py`：按对白时间每 0.25 秒截各角色的头部特写，逐句看是不是该说话的人在张嘴。
